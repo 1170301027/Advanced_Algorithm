@@ -3,7 +3,7 @@ import sys
 import time
 
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 class quickSort:
     """a class to implement quick sort algorithm."""
@@ -35,23 +35,6 @@ class quickSort:
                 self.quick_sort(A, q + 1, r)
             except Exception as e:
                 print(e)
-
-    def quicksort(self, array, left, right):
-        if left >= right:
-            return
-        low = left
-        high = right
-        key = array[low]
-        while left < right:
-            while left < right and array[right] > key:
-                right -= 1
-            array[left] = array[right]
-            while left < right and array[left] <= key:
-                left += 1
-            array[right] = array[left]
-        array[right] = key
-        self.quicksort(array, low, left - 1)
-        self.quicksort(array, left + 1, high)
 
     def quick_sort_three_way_division(self, A, l, r):
         def rand_partition(A, l, r):
@@ -105,6 +88,22 @@ if __name__ == '__main__':
             for i in list:
                 f.write(str(i) + "\n")
 
+    def read_from_file(filepath="b.csv"):
+        result = []
+        for line in open(filepath):
+            result.append(float(line))
+        return result
+
+    # 结果记录，a 原始排序结果，b 三路排序结果，c 自己电脑三路快排的结果。
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False
+    plt.title('快排结果')
+    plt.ylabel('运行时间/s')
+    plt.xlabel('重复元素（i% * 100 * n） -> i/num')
+    plt.plot(range(1, 10), read_from_file('a.csv'), color='red',label='origin')
+    plt.plot(range(1, 10), read_from_file('b.csv'), color = 'blue',label='three ways')
+    plt.legend()
+    plt.show()
 
     Max = 1000000
     # sys.setrecursionlimit(Max)
@@ -116,13 +115,15 @@ if __name__ == '__main__':
         nums = generate(n, repeat)
         start = time.time()
         # print("zhixing ")
-        # qs.quick_sort(nums,0,len(nums) - 1)
-        qs.quick_sort_three_way_division(nums, 0, len(nums) - 1)
+        qs.quick_sort(nums,0,len(nums) - 1)
+        # qs.quick_sort_three_way_division(nums, 0, len(nums) - 1)
         end = time.time()
         print(nums)
         timespan = (float)(end - start)
         # print("start: " + str(start) + ", end: "+ str(end) + ", timespan: " +str(timespan))
         resultList.append(timespan)
         print(resultList)
-    # write_to_file(resultList)
-    write_to_file(resultList, "b.csv")
+
+    write_to_file(resultList)
+
+    # write_to_file(resultList, "b.csv")
