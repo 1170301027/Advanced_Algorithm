@@ -1,9 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+@author: lenovo
+@file: QuickSort.py
+@time: 2021/4/12 18:27
+"""
 import random
-import sys
 import time
 
-
 import matplotlib.pyplot as plt
+
 
 class quickSort:
     """a class to implement quick sort algorithm."""
@@ -88,11 +95,13 @@ if __name__ == '__main__':
             for i in list:
                 f.write(str(i) + "\n")
 
+
     def read_from_file(filepath="b.csv"):
         result = []
         for line in open(filepath):
             result.append(float(line))
         return result
+
 
     # 结果记录，a 原始排序结果，b 三路排序结果，c 自己电脑三路快排的结果。
     plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -100,8 +109,8 @@ if __name__ == '__main__':
     plt.title('快排结果')
     plt.ylabel('运行时间/s')
     plt.xlabel('重复元素（i% * 100 * n） -> i/num')
-    plt.plot(range(1, 10), read_from_file('a.csv'), color='red',label='origin')
-    plt.plot(range(1, 10), read_from_file('b.csv'), color = 'blue',label='three ways')
+    plt.plot(range(1, 10), read_from_file('a.csv'), color='red', label='origin')
+    plt.plot(range(1, 10), read_from_file('b.csv'), color='blue', label='three ways')
     plt.legend()
     plt.show()
 
@@ -115,7 +124,7 @@ if __name__ == '__main__':
         nums = generate(n, repeat)
         start = time.time()
         # print("zhixing ")
-        qs.quick_sort(nums,0,len(nums) - 1)
+        qs.quick_sort(nums, 0, len(nums) - 1)
         # qs.quick_sort_three_way_division(nums, 0, len(nums) - 1)
         end = time.time()
         print(nums)
