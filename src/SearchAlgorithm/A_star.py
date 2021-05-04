@@ -14,22 +14,24 @@ tk = Tk()
 
 
 class Point:
-    def __init__(self, father, cur, f, h):
+    def __init__(self, father, cur, g, h):
         """
         point information
         :param father: 父节点
         :param cur: (cur_x,cur_y)
+        :param g: 从起始到n的实际代价
+        :param h: 从n到目标节点的预估代价
         :param f: 实际代价
-        :param h: 预估到目标节点的代价
         """
         self.father = father  # 根据父节点找路径
         self.cur = cur  # current_position [x,y]
-        self.f = f
+        self.g = g
         self.h = h
+        self.f = self.g+self.h
 
     def __str__(self) -> str:
-        return "cur:" + self.cur + ",father:" + self.father + ",f:" + self.f + ",h:" + self.h
-
+        if not self.father and not self.cur:
+            return "cur:" + str(self.cur) + ",father:(" + str(self.father.cur[0]) + "," + str(self.father.cur[1]) + ") ,f:" + str(self.f) + ",h:" + str(self.h)
 
 class Astar:
     def __init__(self, points):
@@ -41,7 +43,7 @@ class Astar:
 
     def next_step(self, cur_pos, target, open, close):
         # 获取当前坐标
-        f = cur_pos.f
+        g = cur_pos.g
         cur = cur_pos.cur
         for i in range(max(cur[0] - 1, 0), min(len(self.points), cur[0] + 2)):  # 计算可走点坐标，点周围的八个坐标
             for j in range(max(cur[1] - 1, 0), min(len(self.points[0]), cur[1] + 2)):
@@ -53,25 +55,25 @@ class Astar:
                     continue
                 if (i, j) in close:
                     continue
-                newf = f
+                newg = g
                 # 计算已经经过的代价
                 # 对角线 v2
                 if abs(i - cur[0]) == 1 and abs(j - cur[1]) == 1:
-                    newf += sqrt(2)
+                    newg += sqrt(2)
                 else:
-                    newf += 1
+                    newg += 1
                 # 沙漠 yellow
                 if self.points[i][j] == "y":
-                    newf += 4
+                    newg += 4
                 # 河流 blue
                 elif self.points[i][j] == "b":
-                    newf += 2
+                    newg += 2
 
-                next_point = Point(cur_pos, (i, j), newf, self.cal_h(target, [i, j]))
+                next_point = Point(cur_pos, (i, j), newg, self.cal_h(target, [i, j]))
                 descend = open.get((i, j))  # 获取当前节点的后继节点
                 if not descend:  # 若空，则设置为该遍历节点
                     open[(i, j)] = next_point
-                elif descend.f > next_point.f:  # 若非空，则比较遍历节点与后继节点的实际代价
+                elif descend.g > next_point.g:  # 若非空，则比较遍历节点与后继节点的实际代价
                     open.pop((i, j))
                     open[(i, j)] = next_point
 
@@ -80,7 +82,6 @@ class Astar:
         for point, info in open.items():
             if info.f < min_f:
                 res, min_f = point, info.f
-        # 当前节点是某一条最优路径的节点，后续如果说扩展到此节点，那么代价一定比此时的大，所以无需扩展
         close.add(res)
         return open.pop(res)
 
@@ -95,9 +96,11 @@ class Astar:
         close = set()
         while True:
             cur_point = self.selectBest(open, close)
+            print(cur_point.cur)
             # 判断是否为目标节点
             if self.equalTo(cur_point.cur, target):
                 path = []
+                print(cur_point.g,cur_point.h,cur_point.f)
                 # 回溯路径, 倒叙输出的
                 while cur_point:
                     path.append((cur_point.cur[0], cur_point.cur[1]))
@@ -127,17 +130,20 @@ class Astar:
         while True:
             # start 出发
             cur_start = self.selectBest(start_open, start_close)
-            self.next_step(cur_start, target, start_open, start_close)
             cur1, cur2 = find(start_open, target_open)
             if cur1 and cur2:
                 break
+            self.next_step(cur_start, target, start_open, start_close)
             # target 出发
             cur_target = self.selectBest(target_open, target_close)
-            self.next_step(cur_target, start, target_open, target_close)
+            print(cur_target.cur)
             cur1, cur2 = find(target_open, start_open)
             if cur1 and cur2:
                 break
+            self.next_step(cur_target, start, target_open, target_close)
         # 回溯路径, 倒叙输出的
+        if cur1:print(cur1.g,cur1.h,cur1.f)
+        if cur2: print(cur2.g, cur2.h, cur2.f)
         path1 = []
         while cur1:
             path1.append([cur1.cur[0], cur1.cur[1]])
@@ -178,7 +184,7 @@ if __name__ == "__main__":
             return
         for i in range(len(res2)):
             if i == len(res2) - 1:
-                print(res2[i][0], res2[i][1])
+                # print(res2[i][0], res2[i][1])
                 Button(tk, bg="Green", width=width, height=height, text="Target").grid(row=res2[i][0],column=res2[i][1],
                                                                                        sticky=W + E + N + S)
             else:
@@ -239,20 +245,24 @@ if __name__ == "__main__":
         ["w", "w", "w", "g", "w", "w", "w", "g", "w", "w", "w", "w", "g", "w", "w", "w", "w", "w", "w", "w", "w", "w",
          "w", "w", "w", "w", "w", "w", "b", "b", "b", "w", "w", "w", "w", "w", "w", "w", "w", "w"]]
 
-    # 左上角为 （0，0） 向下为x轴向右为y轴
-    start1 = [4, 0]
-    target1 = [5, 11]
-    #
-    start2 = [10, 4]
-    target2 = [0, 35]
+    def  test1():
+        # 左上角为 （0，0） 向下为x轴向右为y轴
+        start1 = [4, 1]
+        target1 = [5, 11]
+        s = Astar(problem1)
+        # path1, path2 = s.one_way(start1, target1), []
+        path1, path2 = s.two_way(start1, target1)
+        draw(problem1, path1, path2, width=7, height=2)
 
-    # s = Astar(problem1)
-    # path1, path2 = s.one_way(start1, target1), []
-    # path1, path2 = s.two_way(start1, target1)
-    # draw(problem1, path1, path2, width=7, height=2)
-    s = Astar(problem2)
-    path1, path2 = s.one_way(start2, target2), []
-    # path1, path2 = s.two_way(start2, target2)
-    draw(problem2, path1, path2, width=3, height=1)
-    res1 = [[4, 0], [4, 1], [4, 2], [3, 3], [2, 4], [3, 5], [4, 6], [5, 7], [5, 8], [5, 9], [5, 10], [5, 11]]
+    def test2():
+        start2 = [10, 4]
+        target2 = [0, 35]
+
+        s = Astar(problem2)
+        # path1, path2 = s.one_way(target2, start2), []
+        # path1, path2 = s.one_way(start2, target2), []
+        path1, path2 = s.two_way(start2, target2)
+        draw(problem2, path1, path2, width=3, height=1)
+    # test1()
+    test2()
     mainloop()

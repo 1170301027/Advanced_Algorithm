@@ -7,6 +7,8 @@
 @time: 2021/4/12 18:26
 """
 import random
+import sys
+import time
 from math import atan2
 
 import matplotlib.pyplot as plt
@@ -66,7 +68,7 @@ class ConvexHull:
             if i not in extra:
                 result.append(i)
         # sort by polygon
-        print(result)
+        # print(result)
         result = self.sort_points_polygon(result)
         return result
 
@@ -92,22 +94,25 @@ class ConvexHull:
                 left.append(i)
             else:
                 right.append(i)
+        result = []
+        try:
+            Ql = self.based_divide_conquer(left)
+            Qr = self.based_divide_conquer(right)
 
-        Ql = self.based_divide_conquer(left)
-        Qr = self.based_divide_conquer(right)
-
-        # merge
-        if len(Qr) > 0:
-            Qr_ymax, index = Qr[0], 0
-            for i in range(len(Qr)):
-                if Qr_ymax < Qr[i]:
-                    Qr_ymax, index = Qr[i], i
-                else:
-                    break
-            result = Ql + Qr[:index + 1] + Qr[len(Qr) - 1:index:-1]
-        else:
-            result = Ql
-
+            # merge
+            if len(Qr) > 0:
+                Qr_ymax, index = Qr[0], 0
+                for i in range(len(Qr)):
+                    if Qr_ymax < Qr[i]:
+                        Qr_ymax, index = Qr[i], i
+                    else:
+                        break
+                result = Ql + Qr[:index + 1] + Qr[len(Qr) - 1:index:-1]
+            else:
+                result = Ql
+        except Exception as e:
+            pass
+            # print(e)
         return self.graham_scan(result)
 
     def graham_scan(self, points: list):
@@ -130,19 +135,19 @@ class ConvexHull:
                 self.base_point = points[i]
                 index = i
         points[0], points[index] = points[index], points[0]
-        print(self.base_point)
+        # print(self.base_point)
         self.quickSortbyAngle(points, 1, len(points) - 1)
-        print("sort :")
-        print(points)
+        # print("sort :")
+        # print(points)
 
         # stack to store vertexes of convex hull
-        print("\nprint stack :")
+        # print("\nprint stack :")
         stack = []
         stack.append(points[0])
         stack.append(points[1])
         stack.append(points[2])
         for i in range(3, len(points)):
-            print(stack)
+            # print(stack)
             top = len(stack) - 1
             flag = True
             while len(stack) > 2 and flag:
@@ -326,33 +331,64 @@ if __name__ == '__main__':
             print(result)
             # save(result, "b.csv")
 
+    def statistics(x,y_gs,y_be,y_dc):
+        print(y_gs)
+        print(y_be)
+        print(y_dc)
+        plt.rcParams['font.sans-serif'] = ['SimHei']
+        plt.rcParams['axes.unicode_minus'] = False
+        plt.title('凸包算法结果统计')
+        plt.ylabel('运行时间/s')
+        plt.xlabel('数据规模n')
+        plt.plot(x, y_gs, color='red', label='graham scan')
+        plt.plot(x, y_be, color='blue', label='enum based')
+        plt.plot(x, y_dc, color='yellow', label='divide and conquer')
+        plt.legend()
+        plt.show()
+
 
     def test_random():
         convex_hull = ConvexHull()
         points = []  # [(x,y),]
-        base = 100
-        for i in range(1, 2):
+        base = 1000
+        x,y_gs,y_be,y_dc = [],[],[],[]
+        for i in range(1, 5):
             n = i * base
+            x.append(n)
             points.clear()
             points = generate_points(n)
             print(points)
             # save(points)
 
             # test graham scan algorithm
-            # result = convex_hull.graham_scan(points)
+            start = time.time()
+            result = convex_hull.graham_scan(points)
+            end = time.time()
+            y_gs.append(end - start)
             # UI(points,result)
 
+
             # test enumerate algorithm
+            print(points)
+            start = time.time()
             result = convex_hull.based_enum(points)
-            UI_only_points(points, result)
+            end = time.time()
+            y_be.append(end - start)
+            # UI_only_points(points, result)
+
 
             # test divide and conquer algorithm
-            # result = convex_hull.based_divide_conquer(points)
+            print(points)
+            start = time.time()
+            result = convex_hull.based_divide_conquer(points)
+            end = time.time()
+            y_dc.append(end - start)
             # UI(points,result)
 
             print(result)
             # save(result, "b.csv")
+        statistics(x,y_gs,y_be,y_dc)
 
-
-    # test_random()
-    test_read_file()
+    # sys.setrecursionlimit(10000)
+    test_random()
+    # test_read_file()
