@@ -100,6 +100,7 @@ class Astar:
             # 判断是否为目标节点
             if self.equalTo(cur_point.cur, target):
                 path = []
+                print("g h f:")
                 print(cur_point.g,cur_point.h,cur_point.f)
                 # 回溯路径, 倒叙输出的
                 while cur_point:
@@ -136,12 +137,14 @@ class Astar:
             self.next_step(cur_start, target, start_open, start_close)
             # target 出发
             cur_target = self.selectBest(target_open, target_close)
-            print(cur_target.cur)
+            # print(cur_target.cur)
+
             cur1, cur2 = find(target_open, start_open)
             if cur1 and cur2:
                 break
             self.next_step(cur_target, start, target_open, target_close)
         # 回溯路径, 倒叙输出的
+        print("g h f:")
         if cur1:print(cur1.g,cur1.h,cur1.f)
         if cur2: print(cur2.g, cur2.h, cur2.f)
         path1 = []
@@ -263,6 +266,6 @@ if __name__ == "__main__":
         # path1, path2 = s.one_way(start2, target2), []
         path1, path2 = s.two_way(start2, target2)
         draw(problem2, path1, path2, width=3, height=1)
-    # test1()
-    test2()
+    test1()
+    # test2()
     mainloop()
