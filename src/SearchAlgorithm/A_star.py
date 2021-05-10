@@ -33,14 +33,22 @@ class Point:
         if not self.father and not self.cur:
             return "cur:" + str(self.cur) + ",father:(" + str(self.father.cur[0]) + "," + str(self.father.cur[1]) + ") ,f:" + str(self.f) + ",h:" + str(self.h)
 
-class Astar:
+class A_star:
     def __init__(self, points):
         self.points = points  # 地图
 
+    '''计算h：欧几里得距离'''
     def cal_h(self, point_1, point_2):
-        # 计算预估代价，启发函数 哈夫曼距离
-        return abs(point_1[0] - point_2[0]) + abs(point_1[1] - point_2[1])
+        return sqrt((point_1[0] - point_2[0]) ** 2 + (point_1[1] - point_2[1]) ** 2)
 
+    '''
+    获取下一步可扩展节点
+    gray：不可扩展
+    white：+1
+    blue：+2
+    yellow：+4
+    对角：+√2
+    '''
     def next_step(self, cur_pos, target, open, close):
         # 获取当前坐标
         g = cur_pos.g
@@ -77,7 +85,8 @@ class Astar:
                     open.pop((i, j))
                     open[(i, j)] = next_point
 
-    def selectBest(self, open, close):
+    '''选择最优的可扩展节点'''
+    def select_best(self, open, close):
         res, min_f = None, float('inf')  # infinity
         for point, info in open.items():
             if info.f < min_f:
@@ -85,20 +94,22 @@ class Astar:
         close.add(res)
         return open.pop(res)
 
-    def equalTo(self, cur, target):  # [x,y]
+    '''辅助：判断两个点是否相同'''
+    def equal(self, cur, target):  # [x,y]
         if cur[0] == target[0] and cur[1] == target[1]:
             return True
         return False
 
+    '''单向寻路实现'''
     def one_way(self, start, target):
         open = {}  # 存储 {(x,y):Point(next_x,next_y)}
         open[(start[0], start[1])] = Point(None, start, 0, self.cal_h(target, start))
         close = set()
         while True:
-            cur_point = self.selectBest(open, close)
+            cur_point = self.select_best(open, close)
             print(cur_point.cur)
             # 判断是否为目标节点
-            if self.equalTo(cur_point.cur, target):
+            if self.equal(cur_point.cur, target):
                 path = []
                 print("g h f:")
                 print(cur_point.g,cur_point.h,cur_point.f)
@@ -111,6 +122,7 @@ class Astar:
             # 寻找下一个扩展节点
             self.next_step(cur_point, target, open, close)
 
+    '''双向寻路实现'''
     def two_way(self, start, target):
 
         def find(start_open, target_open):  # 判断是否找到双向的交点
@@ -130,13 +142,13 @@ class Astar:
 
         while True:
             # start 出发
-            cur_start = self.selectBest(start_open, start_close)
+            cur_start = self.select_best(start_open, start_close)
             cur1, cur2 = find(start_open, target_open)
             if cur1 and cur2:
                 break
             self.next_step(cur_start, target, start_open, start_close)
             # target 出发
-            cur_target = self.selectBest(target_open, target_close)
+            cur_target = self.select_best(target_open, target_close)
             # print(cur_target.cur)
 
             cur1, cur2 = find(target_open, start_open)
@@ -252,20 +264,20 @@ if __name__ == "__main__":
         # 左上角为 （0，0） 向下为x轴向右为y轴
         start1 = [4, 1]
         target1 = [5, 11]
-        s = Astar(problem1)
+        s = A_star(problem1)
         # path1, path2 = s.one_way(start1, target1), []
         path1, path2 = s.two_way(start1, target1)
         draw(problem1, path1, path2, width=7, height=2)
 
     def test2():
+        # 左上角为 （0，0） 向下为x轴向右为y轴
         start2 = [10, 4]
         target2 = [0, 35]
-
-        s = Astar(problem2)
+        s = A_star(problem2)
         # path1, path2 = s.one_way(target2, start2), []
         # path1, path2 = s.one_way(start2, target2), []
         path1, path2 = s.two_way(start2, target2)
         draw(problem2, path1, path2, width=3, height=1)
-    test1()
-    # test2()
+    # test1()
+    test2()
     mainloop()
