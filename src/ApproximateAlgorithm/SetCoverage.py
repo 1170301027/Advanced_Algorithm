@@ -22,27 +22,26 @@ import matplotlib.pyplot as plt
 # 生成实验数据
 class generate():
     def __init__(self):
-        self.X = []
-        self.F = []
+        self.X = [] # 有限集
+        self.F = [] # 子集合族
 
     def generateData(self, size):
-        # X是原始数据集，用set表示防止重复
-        X = set(list(range(size)))
+        X = set(list(range(size))) # 0~n-1
         self.X = X
-        # S代表每次生成的数据集合, random.sample函数返回X中长为20的子序列
         S = [random.randint(0, size - 1) for i in range(20)] # 随机选X中的 20 个点放入S0
         S = set(S)
         self.F.append(list(S))
-        # rest表示剩余集合,unionS表示子集覆盖集合
-        rest, unionS = X - S, S
+        # union_s表示∪Sj,rest表示X-union_s
+        union_s = S
+        rest = X - union_s
         while len(rest) >= 20:
             n = random.randint(1, 20)
             x = random.randint(1, n)
 
             S = set(random.sample(rest, x))
-            rest = rest - S  # 更新剩余集合
-            S.update(random.sample(unionS, n - x))
-            unionS.update(S)  # 更新已经被选择的数据集合
+            S.update(random.sample(union_s, n - x))
+            union_s.update(S)  # 更新已经被选择的数据集合
+            rest = X - union_s
             self.F.append(list(S))
 
         # 小于20时直接加入
@@ -64,24 +63,32 @@ class set_coverage:
         """Constructor for set_coverage"""
 
     def greedy(self, X, F) -> list:
+        print(F)
+        U = set(X)
         C = []
-        while X:
-            # 贪心策略，每次选择最多的元素集合，以intersection() 方法用于返回两个或更多集合的交集。
-            S = max(F,key=(lambda x:len(X.intersection(x))))
-            X -= S
+        while U:
+            # 贪心策略:每次选择覆盖U中元素最多的集合加入到C中，
+            S = max(F,key=(lambda x:len(U.intersection(x))))
+            U -= S
             C.append(S)
         return C
 
     def liner_programming(self, X:list, F) -> list:
+        # 加权集合覆盖：舍入
+        # xs = {0,1}
+
         X = list(X)
-        A = []
-        # 写出限制条件矩阵
+        A = [] # 系数矩阵
         for i in range(len(X)):
             row = []
             for j in range(len(F)):
-                row.append(1 if X[i] in F[j] else 0)
+                if X[i] in F[j]:
+                    row.append(1)
+                else:
+                    row.append(0)
             A.append(row)
-        t = 1 / max([sum(r) for r in A])
+        f = max([sum(r) for r in A]) # 统计X的元素在F中的最大频率
+        t = 1 / f
 
         # 构建线性方程
         prob = pulp.LpProblem("Linear minimize problem", pulp.LpMinimize)
@@ -130,8 +137,10 @@ if __name__ == "__main__":
 
     datasize = [100, 1000, 5000]
     # 读文件
-    # read(time_lp, time_greedy)
-    # draw(datasize, time_lp, time_greedy)
+    read(time_lp, time_greedy)
+    draw(datasize, time_lp, time_greedy)
+    time_lp.clear()
+    time_greedy.clear()
     for i in datasize:
         g = generate()
         g.generateData(i)
