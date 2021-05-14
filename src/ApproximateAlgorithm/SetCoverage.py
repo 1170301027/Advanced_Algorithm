@@ -81,27 +81,29 @@ class set_coverage:
         A = [] # 系数矩阵
         for i in range(len(X)):
             row = []
-            for j in range(len(F)):
+            for j in range(len(F)): # e属于X， e属于Si
                 if X[i] in F[j]:
                     row.append(1)
                 else:
                     row.append(0)
             A.append(row)
-        f = max([sum(r) for r in A]) # 统计X的元素在F中的最大频率
+        f = max([sum(r) for r in A]) # 统计X的元素在F中的最大频率,
         t = 1 / f
 
         # 构建线性方程
         prob = pulp.LpProblem("Linear minimize problem", pulp.LpMinimize)
-        ingredient_vars = pulp.LpVariable.dicts("Ingr", X, 0, 1)
-
+        # 添加变量 x_num
+        ingredient_vars = pulp.LpVariable.dicts("x", X, lowBound=0, upBound=1, cat="Continuous")
+        # 添加目标函数
         prob += pulp.lpSum([1 * ingredient_vars[i] for i in X])
+        # 添加约束
         for i in range(len(X)):
             prob += pulp.lpSum([A[i][j] * ingredient_vars[j] for j in range(len(F))]) >= 1
         prob.solve()
 
         prob = prob.variables()
         # 按照目标方程排序
-        prob = sorted(prob, key=lambda x: int(x.name[5:]))
+        prob = sorted(prob, key=lambda x: int(x.name[2:]))
         # 按照阈值进行舍入
         C = [set(f) for i, f in enumerate(F) if prob[i].varValue > t]
         return C
@@ -131,6 +133,10 @@ if __name__ == "__main__":
 
         plt.plot(x, time1, color='red', label='线性规划')
         plt.plot(x, time2, color='blue', label='贪心')
+
+        for a,b,c in zip(x,time1,time2):
+            plt.text(a, b, "%f" % b , ha='center', va='bottom', fontsize=12)
+            plt.text(a, c, "%f" % c, ha='center', va='top', fontsize=12)
         plt.legend()
         plt.show()
 
