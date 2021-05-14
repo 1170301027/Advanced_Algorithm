@@ -27,11 +27,13 @@ class Point:
         self.cur = cur  # current_position [x,y]
         self.g = g
         self.h = h
-        self.f = self.g+self.h
+        self.f = self.g + self.h
 
     def __str__(self) -> str:
         if not self.father and not self.cur:
-            return "cur:" + str(self.cur) + ",father:(" + str(self.father.cur[0]) + "," + str(self.father.cur[1]) + ") ,f:" + str(self.f) + ",h:" + str(self.h)
+            return "cur:" + str(self.cur) + ",father:(" + str(self.father.cur[0]) + "," + str(
+                self.father.cur[1]) + ") ,f:" + str(self.f) + ",h:" + str(self.h)
+
 
 class A_star:
     def __init__(self, points):
@@ -107,20 +109,21 @@ class A_star:
         close = set()
         while True:
             cur_point = self.select_best(open, close)
-            print(cur_point.cur)
+            # 寻找下一个扩展节点
+            self.next_step(cur_point, target, open, close)
             # 判断是否为目标节点
             if self.equal(cur_point.cur, target):
                 path = []
-                print("g h f:")
-                print(cur_point.g,cur_point.h,cur_point.f)
+                print("\ng h f:")
+                print(cur_point.g, cur_point.h, cur_point.f)
+                print("total g :"+str(cur_point.g))
                 # 回溯路径, 倒叙输出的
                 while cur_point:
                     path.append((cur_point.cur[0], cur_point.cur[1]))
                     cur_point = cur_point.father
                 # print(close)
+                print(path)
                 return path
-            # 寻找下一个扩展节点
-            self.next_step(cur_point, target, open, close)
 
     '''双向寻路实现'''
     def two_way(self, start, target):
@@ -128,7 +131,7 @@ class A_star:
         def find(start_open, target_open):  # 判断是否找到双向的交点
             for key in start_open.keys():
                 if key in target_open:
-                    startCur, endCur = start_open[key], target_open[key]
+                    endCur, startCur = start_open[key], target_open[key]
                     return startCur, endCur
             return None, None
 
@@ -156,9 +159,11 @@ class A_star:
                 break
             self.next_step(cur_target, start, target_open, target_close)
         # 回溯路径, 倒叙输出的
-        print("g h f:")
-        if cur1:print(cur1.g,cur1.h,cur1.f)
+        print("\ng h f:")
+        if cur1: print(cur1.g, cur1.h, cur1.f)
         if cur2: print(cur2.g, cur2.h, cur2.f)
+        # print("total g :" + str(cur1.father.g + cur2.g))
+        print("total g :" + str(cur1.g + cur2.g))
         path1 = []
         while cur1:
             path1.append([cur1.cur[0], cur1.cur[1]])
@@ -167,13 +172,17 @@ class A_star:
         while cur2:
             path2.append([cur2.cur[0], cur2.cur[1]])
             cur2 = cur2.father
+        print(path1)
+        print(path2)
+        if path1[-1] != start:
+            path1,path2 = path2,path1
         return path1, path2
 
 
 if __name__ == "__main__":
     # 让res1和res2分别表示从start, target出发的路径，既可以画单向的，又可以画双向的
-    def draw(points, res1, res2, width, height):
-        # 进行初始着色
+    def draw(points, path1, path2, width, height):
+        # 地图
         for i in range(len(points)):
             for j in range(len(points[0])):
                 if points[i][j] == "g":
@@ -185,25 +194,27 @@ if __name__ == "__main__":
                 else:
                     Button(tk, bg="white", width=width, height=height).grid(row=i, column=j, sticky=W + E + N + S)
         # 对以start为起点的路径进行着色
-        for i in range(len(res1)):
-            if i == len(res1) - 1:
-                Button(tk, bg="Violet", width=width, height=height, text="Start").grid(row=res1[i][0],column=res1[i][1],
+        for i in range(len(path1)):
+            if i == len(path1) - 1:
+                Button(tk, bg="Violet", width=width, height=height, text="Start").grid(row=path1[i][0],
+                                                                                       column=path1[i][1],
                                                                                        sticky=W + E + N + S)
             else:
-                Button(tk, bg="Violet", width=width, height=height).grid(row=res1[i][0], column=res1[i][1],
+                Button(tk, bg="Violet", width=width, height=height).grid(row=path1[i][0], column=path1[i][1],
                                                                          sticky=W + E + N + S)
         # 单向判断
-        if len(res2) == 0:
-            Button(tk, bg="Violet", width=width, height=height, text="Target").grid(row=res1[0][0], column=res1[0][1],
+        if len(path2) == 0:
+            Button(tk, bg="Violet", width=width, height=height, text="Target").grid(row=path1[0][0], column=path1[0][1],
                                                                                     sticky=W + E + N + S)
             return
-        for i in range(len(res2)):
-            if i == len(res2) - 1:
+        for i in range(len(path2)):
+            if i == len(path2) - 1:
                 # print(res2[i][0], res2[i][1])
-                Button(tk, bg="Green", width=width, height=height, text="Target").grid(row=res2[i][0],column=res2[i][1],
+                Button(tk, bg="Green", width=width, height=height, text="Target").grid(row=path2[i][0],
+                                                                                       column=path2[i][1],
                                                                                        sticky=W + E + N + S)
             else:
-                Button(tk, bg="Green", width=width, height=height).grid(row=res2[i][0], column=res2[i][1],
+                Button(tk, bg="Green", width=width, height=height).grid(row=path2[i][0], column=path2[i][1],
                                                                         sticky=W + E + N + S)
 
 
@@ -260,24 +271,27 @@ if __name__ == "__main__":
         ["w", "w", "w", "g", "w", "w", "w", "g", "w", "w", "w", "w", "g", "w", "w", "w", "w", "w", "w", "w", "w", "w",
          "w", "w", "w", "w", "w", "w", "b", "b", "b", "w", "w", "w", "w", "w", "w", "w", "w", "w"]]
 
-    def  test1():
+
+    def test1():
         # 左上角为 （0，0） 向下为x轴向右为y轴
         start1 = [4, 1]
         target1 = [5, 11]
         s = A_star(problem1)
-        # path1, path2 = s.one_way(start1, target1), []
+        path1, path2 = s.one_way(start1, target1), []
         path1, path2 = s.two_way(start1, target1)
         draw(problem1, path1, path2, width=7, height=2)
+
 
     def test2():
         # 左上角为 （0，0） 向下为x轴向右为y轴
         start2 = [10, 4]
         target2 = [0, 35]
         s = A_star(problem2)
-        # path1, path2 = s.one_way(target2, start2), []
-        # path1, path2 = s.one_way(start2, target2), []
+        path1, path2 = s.one_way(start2, target2), []
         path1, path2 = s.two_way(start2, target2)
         draw(problem2, path1, path2, width=3, height=1)
-    # test1()
-    test2()
+
+
+    test1()
+    # test2()
     mainloop()
