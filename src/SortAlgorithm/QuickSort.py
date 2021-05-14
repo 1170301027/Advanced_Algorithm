@@ -111,6 +111,7 @@ if __name__ == '__main__':
     plt.xlabel('重复元素（i% * 100 * n） -> i/num')
     plt.plot(range(1, 10), read_from_file('a.csv'), color='red', label='origin')
     plt.plot(range(1, 10), read_from_file('b.csv'), color='blue', label='three ways')
+    plt.plot(range(1, 10), read_from_file("c.csv"), color='yellow', label='system call')
     plt.legend()
     plt.show()
 
@@ -123,9 +124,9 @@ if __name__ == '__main__':
         repeat = int(n * 10 * 0.01 * i)
         nums = generate(n, repeat)
         start = time.time()
-        # print("zhixing ")
-        qs.quick_sort(nums, 0, len(nums) - 1)
+        # qs.quick_sort(nums, 0, len(nums) - 1)
         # qs.quick_sort_three_way_division(nums, 0, len(nums) - 1)
+        nums.sort()
         end = time.time()
         print(nums)
         timespan = (float)(end - start)
@@ -133,6 +134,8 @@ if __name__ == '__main__':
         resultList.append(timespan)
         print(resultList)
 
-    write_to_file(resultList)
+    # write_to_file(resultList, "a.csv")
 
     # write_to_file(resultList, "b.csv")
+
+    write_to_file(resultList, "c.csv")
